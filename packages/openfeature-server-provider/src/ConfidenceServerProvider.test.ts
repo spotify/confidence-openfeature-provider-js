@@ -1,4 +1,11 @@
-import { ErrorCode, Logger, ProviderStatus } from '@openfeature/web-sdk';
+import {
+  FlagNotFoundError,
+  Logger,
+  ParseError,
+  ProviderStatus,
+  TypeMismatchError,
+  InvalidContextError,
+} from '@openfeature/js-sdk';
 import { ConfidenceClient, Configuration } from '@spotify-confidence/client-http';
 import { ConfidenceServerProvider } from './ConfidenceServerProvider';
 
@@ -65,6 +72,13 @@ const dummyConfiguration: Configuration = {
       value: undefined,
       schema: 'undefined',
     },
+    ['targeting-error-flag']: {
+      name: 'targeting-error-flag',
+      variant: '',
+      reason: Configuration.ResolveReason.TargetingKeyError,
+      value: { enabled: true },
+      schema: { enabled: 'boolean' },
+    },
   },
   resolveToken: 'before-each',
   context: {},
@@ -92,6 +106,12 @@ describe('ConfidenceServerProvider', () => {
     await instanceUnderTest.resolveBooleanEvaluation('testFlag.bool', false, {}, dummyConsole);
 
     expect(resolveMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('should throw invalid context error when the reason from confidence is targeting key error', async () => {
+    expect(() =>
+      instanceUnderTest.resolveBooleanEvaluation('targeting-error-flag.enabled', false, {}, dummyConsole),
+    ).rejects.toThrow(InvalidContextError);
   });
 
   describe('resolveBooleanEvaluation', () => {
@@ -125,33 +145,21 @@ describe('ConfidenceServerProvider', () => {
     });
 
     it('should return default if the flag is not found', async () => {
-      const actual = await instanceUnderTest.resolveBooleanEvaluation('notARealFlag.bool', false, {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: false,
-        errorCode: ErrorCode.FLAG_NOT_FOUND,
-        reason: 'ERROR',
-      });
+      expect(() =>
+        instanceUnderTest.resolveBooleanEvaluation('notARealFlag.bool', false, {}, dummyConsole),
+      ).rejects.toThrow(new FlagNotFoundError('Flag "notARealFlag" was not found'));
     });
 
     it('should return default if the flag requested is the wrong type', async () => {
-      const actual = await instanceUnderTest.resolveBooleanEvaluation('testFlag.str', false, {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: false,
-        errorCode: ErrorCode.TYPE_MISMATCH,
-        reason: 'ERROR',
-      });
+      expect(() => instanceUnderTest.resolveBooleanEvaluation('testFlag.str', false, {}, dummyConsole)).rejects.toThrow(
+        TypeMismatchError,
+      );
     });
 
     it('should return default if the value requested is not in the flag schema', async () => {
-      const actual = await instanceUnderTest.resolveBooleanEvaluation('testFlag.404', false, {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: false,
-        errorCode: ErrorCode.PARSE_ERROR,
-        reason: 'ERROR',
-      });
+      expect(() => instanceUnderTest.resolveBooleanEvaluation('testFlag.404', false, {}, dummyConsole)).rejects.toThrow(
+        ParseError,
+      );
     });
   });
 
@@ -201,33 +209,21 @@ describe('ConfidenceServerProvider', () => {
     });
 
     it('should return default if the flag is not found', async () => {
-      const actual = await instanceUnderTest.resolveNumberEvaluation('notARealFlag.int', 1, {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: 1,
-        errorCode: ErrorCode.FLAG_NOT_FOUND,
-        reason: 'ERROR',
-      });
+      expect(() => instanceUnderTest.resolveNumberEvaluation('notARealFlag.int', 1, {}, dummyConsole)).rejects.toThrow(
+        FlagNotFoundError,
+      );
     });
 
     it('should return default if the flag requested is the wrong type', async () => {
-      const actual = await instanceUnderTest.resolveNumberEvaluation('testFlag.str', 1, {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: 1,
-        errorCode: ErrorCode.TYPE_MISMATCH,
-        reason: 'ERROR',
-      });
+      expect(() => instanceUnderTest.resolveNumberEvaluation('testFlag.str', 1, {}, dummyConsole)).rejects.toThrow(
+        TypeMismatchError,
+      );
     });
 
     it('should return default if the value requested is not in the flag schema', async () => {
-      const actual = await instanceUnderTest.resolveNumberEvaluation('testFlag.404', 1, {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: 1,
-        errorCode: ErrorCode.PARSE_ERROR,
-        reason: 'ERROR',
-      });
+      expect(() => instanceUnderTest.resolveNumberEvaluation('testFlag.404', 1, {}, dummyConsole)).rejects.toThrow(
+        ParseError,
+      );
     });
   });
 
@@ -255,43 +251,27 @@ describe('ConfidenceServerProvider', () => {
     });
 
     it('should return default if the flag is not found', async () => {
-      const actual = await instanceUnderTest.resolveStringEvaluation('notARealFlag.str', 'default', {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: 'default',
-        errorCode: ErrorCode.FLAG_NOT_FOUND,
-        reason: 'ERROR',
-      });
+      expect(() =>
+        instanceUnderTest.resolveStringEvaluation('notARealFlag.str', 'default', {}, dummyConsole),
+      ).rejects.toThrow(new FlagNotFoundError('Flag "notARealFlag" was not found'));
     });
 
     it('should return default if the flag requested is the wrong type', async () => {
-      const actual = await instanceUnderTest.resolveStringEvaluation('testFlag.int', 'default', {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: 'default',
-        errorCode: ErrorCode.TYPE_MISMATCH,
-        reason: 'ERROR',
-      });
+      expect(() =>
+        instanceUnderTest.resolveStringEvaluation('testFlag.int', 'default', {}, dummyConsole),
+      ).rejects.toThrow(TypeMismatchError);
     });
 
     it('should return default if the flag requested is the wrong type from nested obj', async () => {
-      const actual = await instanceUnderTest.resolveStringEvaluation('testFlag.obj.int', 'default', {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: 'default',
-        errorCode: ErrorCode.TYPE_MISMATCH,
-        reason: 'ERROR',
-      });
+      expect(() =>
+        instanceUnderTest.resolveStringEvaluation('testFlag.obj.int', 'default', {}, dummyConsole),
+      ).rejects.toThrow(TypeMismatchError);
     });
 
     it('should return default if the value requested is not in the flag schema', async () => {
-      const actual = await instanceUnderTest.resolveStringEvaluation('testFlag.404', 'default', {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: 'default',
-        errorCode: ErrorCode.PARSE_ERROR,
-        reason: 'ERROR',
-      });
+      expect(() =>
+        instanceUnderTest.resolveStringEvaluation('testFlag.404', 'default', {}, dummyConsole),
+      ).rejects.toThrow(ParseError);
     });
   });
 
@@ -360,8 +340,8 @@ describe('ConfidenceServerProvider', () => {
     });
 
     it('should resolve a full object with type mismatch default', async () => {
-      expect(
-        await instanceUnderTest.resolveObjectEvaluation(
+      expect(() =>
+        instanceUnderTest.resolveObjectEvaluation(
           'testFlag.obj',
           {
             testBool: false,
@@ -369,43 +349,25 @@ describe('ConfidenceServerProvider', () => {
           {},
           dummyConsole,
         ),
-      ).toEqual({
-        errorCode: 'TYPE_MISMATCH',
-        reason: 'ERROR',
-        value: {
-          testBool: false,
-        },
-      });
+      ).rejects.toThrow(TypeMismatchError);
     });
 
     it('should return default if the flag is not found', async () => {
-      const actual = await instanceUnderTest.resolveObjectEvaluation('notARealFlag.obj', {}, {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: {},
-        errorCode: ErrorCode.FLAG_NOT_FOUND,
-        reason: 'ERROR',
-      });
+      expect(() => instanceUnderTest.resolveObjectEvaluation('notARealFlag.obj', {}, {}, dummyConsole)).rejects.toThrow(
+        new FlagNotFoundError('Flag "notARealFlag" was not found'),
+      );
     });
 
     it('should return default if the flag requested is the wrong type', async () => {
-      const actual = await instanceUnderTest.resolveObjectEvaluation('testFlag.str', {}, {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: {},
-        errorCode: ErrorCode.TYPE_MISMATCH,
-        reason: 'ERROR',
-      });
+      expect(() => instanceUnderTest.resolveObjectEvaluation('testFlag.str', {}, {}, dummyConsole)).rejects.toThrow(
+        TypeMismatchError,
+      );
     });
 
     it('should return default if the value requested is not in the flag schema', async () => {
-      const actual = await instanceUnderTest.resolveObjectEvaluation('testFlag.404', {}, {}, dummyConsole);
-
-      expect(actual).toEqual({
-        value: {},
-        errorCode: ErrorCode.PARSE_ERROR,
-        reason: 'ERROR',
-      });
+      expect(() => instanceUnderTest.resolveObjectEvaluation('testFlag.404', {}, {}, dummyConsole)).rejects.toThrow(
+        ParseError,
+      );
     });
   });
 });
