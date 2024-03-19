@@ -1,8 +1,10 @@
-import { FlagResolverClient, FlagResolution, ApplyManager } from './FlagResolverClient';
 import { EventSenderEngine } from './EventSenderEngine';
+import { FlagResolverClient } from './FlagResolverClientX';
 import { Value } from './Value';
 import { EventSender } from './events';
 import { Context } from './context';
+import { FlagEvaluation, FlagResolution, FlagResolver } from './flags';
+import { ApplyManager } from './FlagResolverClient';
 
 export { FlagResolverClient, FlagResolution };
 
@@ -25,7 +27,7 @@ interface Configuration {
   readonly applyManager: ApplyManager;
 }
 
-export class Confidence implements EventSender {
+export class Confidence implements EventSender, FlagResolver {
   private readonly config: Configuration;
   private readonly parent?: Confidence;
   private _context: Map<string, Value> = new Map();
@@ -79,13 +81,17 @@ export class Confidence implements EventSender {
     child.setContext(context);
     return child;
   }
-  /**
-   * @internal
-   */
-  resolve(flagNames: string[]): Promise<FlagResolution> {
-    // todo evaluationContext should be the whole context, but for now we take just the openFeature context to not break e2e tests
-    const evaluationContext: Value.Struct = (this._context.get('openFeature') || {}) as Value.Struct;
-    return this.config.flagResolverClient.resolve(evaluationContext, { apply: false, flags: flagNames });
+
+  resolveFlags(...names: string[]): Promise<FlagResolution> {
+    throw new Error('Not implemented');
+  }
+
+  evaluateFlag<T>(path: string, defaultValue: T): Promise<FlagEvaluation<T>> {
+    throw new Error('Not implemented');
+  }
+
+  getFlagValue<T>(path: string, defaultValue: T): Promise<T> {
+    throw new Error('Not implemented');
   }
 
   /**
@@ -96,27 +102,18 @@ export class Confidence implements EventSender {
   }
 
   static create(options: ConfidenceOptions): Confidence {
-    const sdk = {
-      id: 'SDK_ID_JS_WEB_PROVIDER',
-      version: '0.0.1-total-confidence',
-    } as const;
-    const fetchImplementation = options.fetchImplementation || defaultFetchImplementation();
-    const flagResolverClient = new FlagResolverClient({
-      clientSecret: options.clientSecret,
-      region: options.region,
-      baseUrl: options.baseUrl,
-      timeout: options.timeout,
-      apply: options.environment === 'backend',
-      environment: options.environment,
-      fetchImplementation,
-      sdk,
-    });
+    // const sdk = {
+    //   id: 'SDK_ID_JS_WEB_PROVIDER',
+    //   version: '0.0.1-total-confidence',
+    // } as const;
+    // const fetchImplementation = options.fetchImplementation || defaultFetchImplementation();
+    const flagResolverClient = new FlagResolverClient();
     return new Confidence({
       environment: options.environment,
       flagResolverClient,
       eventSenderEngine: new EventSenderEngine(),
       applyManager: new ApplyManager({
-        client: flagResolverClient,
+        client: flagResolverClient as any,
         timeout: APPLY_TIMEOUT,
         maxBufferSize: MAX_APPLY_BUFFER_SIZE,
       }),
@@ -124,11 +121,11 @@ export class Confidence implements EventSender {
   }
 }
 
-function defaultFetchImplementation(): typeof fetch {
-  if (!globalThis.fetch) {
-    throw new TypeError(
-      'No default fetch implementation found. Please provide provide the fetchImplementation option to createConfidenceWebProvider.',
-    );
-  }
-  return globalThis.fetch.bind(globalThis);
-}
+// function defaultFetchImplementation(): typeof fetch {
+//   if (!globalThis.fetch) {
+//     throw new TypeError(
+//       'No default fetch implementation found. Please provide provide the fetchImplementation option to createConfidenceWebProvider.',
+//     );
+//   }
+//   return globalThis.fetch.bind(globalThis);
+// }

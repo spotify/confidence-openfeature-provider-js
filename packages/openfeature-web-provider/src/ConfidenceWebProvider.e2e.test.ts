@@ -8,6 +8,10 @@ describe('ConfidenceHTTPProvider E2E tests', () => {
       clientSecret: 'RxDVTrXvc6op1XxiQ4OaR31dKbJ39aYV',
       timeout: 1000,
       environment: 'client',
+      fetchImplementation: (input, init) => {
+        const req = new Request(input, init);
+        return fetch(req, { headers: { 'x-some-header': 'value' } });
+      },
     });
     const confidenceProvider = createConfidenceWebProvider(confidence);
     const providerReadyPromise = new Promise<void>(resolve => {
