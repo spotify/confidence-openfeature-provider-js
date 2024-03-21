@@ -2,6 +2,7 @@
   "name": "@spotify-confidence/client-http",
   "license": "Apache-2.0",
   "version": "0.1.5",
+  "type": "module",
   "module": "build/esm/index.js",
   "types": "build/types/index.d.ts",
   "engineStrict": true,
