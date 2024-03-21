@@ -1,6 +1,11 @@
 import { Provider } from '@openfeature/web-sdk';
 import { ConfidenceWebProvider } from './ConfidenceWebProvider';
-import { ConfidenceClient, ConfidenceClientOptions, FetchBuilder, TimeUnit } from '@spotify-confidence/client-http';
+import { ConfidenceClient, ConfidenceClientOptions, FetchBuilder } from '@spotify-confidence/client-http';
+
+const enum TimeUnit {
+  SECOND = 1000,
+  MINUTE = 60 * TimeUnit.SECOND,
+}
 
 type ConfidenceWebProviderFactoryOptions = {
   region?: ConfidenceClientOptions['region'];
