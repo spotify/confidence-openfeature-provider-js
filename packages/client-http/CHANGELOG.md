@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.6](https://github.com/spotify/confidence-openfeature-provider-js/compare/client-http-v0.1.5...client-http-v0.1.6) (2024-03-28)
+
+
+### 🐛 Bug Fixes
+
+* **client-http:** do not retry aborted requests ([79b650d](https://github.com/spotify/confidence-openfeature-provider-js/commit/79b650d9983f75ff325eb97b858c8b9b051d6efa))
+
+
+### ✨ New Features
+
+* **client-http:** improved request logic ([1fb1e41](https://github.com/spotify/confidence-openfeature-provider-js/commit/1fb1e41dddef2673f87935d4eec6a679ec8d09c0))
+* make provider fetchImplementation optional ([0a7eb86](https://github.com/spotify/confidence-openfeature-provider-js/commit/0a7eb866c96352012deae19638f851049ed9894a))
+
 ## [0.1.5](https://github.com/spotify/confidence-openfeature-provider-js/compare/client-http-v0.1.4...client-http-v0.1.5) (2024-02-15)
 
 
