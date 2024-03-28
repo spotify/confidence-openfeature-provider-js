@@ -6,6 +6,21 @@
   * dependencies
     * @spotify-confidence/client-http bumped from ^0.1.2 to ^0.1.3
 
+## [0.2.1](https://github.com/spotify/confidence-openfeature-provider-js/compare/openfeature-web-provider-v0.2.0...openfeature-web-provider-v0.2.1) (2024-03-28)
+
+
+### ✨ New Features
+
+* **client-http:** improved request logic ([1fb1e41](https://github.com/spotify/confidence-openfeature-provider-js/commit/1fb1e41dddef2673f87935d4eec6a679ec8d09c0))
+* make provider fetchImplementation optional ([0a7eb86](https://github.com/spotify/confidence-openfeature-provider-js/commit/0a7eb866c96352012deae19638f851049ed9894a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @spotify-confidence/sdk bumped from 0.0.1 to 0.0.2
+
 ## [0.2.0](https://github.com/spotify/confidence-openfeature-provider-js/compare/openfeature-web-provider-v0.1.5...openfeature-web-provider-v0.2.0) (2024-02-15)
 
 
